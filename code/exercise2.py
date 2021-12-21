@@ -3,6 +3,7 @@ Add the code for the 2nd exercise to this file. You can add additional ".py" fil
 functions, etc.).
 """
 import csv
+import gensim.models
 from dataclasses import dataclass
 from typing import Generator, Iterable, Callable
 
@@ -62,7 +63,40 @@ def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
     return pearsonr(gt_scores, predicted_scores)[0]
 
 
+def part1():
+    model = gensim.models.KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
+    # print(model.get_vector("word", norm=True))  # normalizing usually improves performance
+    # print(model.get_vector("word", norm=True).__sizeof__())  # normalizing usually improves performance
+
+    word_vector_cat = model.get_vector("cat", norm=True)
+    word_vector_dog = model.get_vector("dog", norm=True)
+    word_vector_vienna = model.get_vector("Vienna", norm=True)
+    word_vector_austria = model.get_vector("Austria", norm=True)
+
+    print('########## Cosine similarity between the word vectors ##########\n')
+    print('Cosine similarity for pair1: ("cat", "dog") = {}'.format(
+        cosine_similarity([word_vector_cat], [word_vector_dog])[0][0]))
+    print('Cosine similarity for pair2: ("cat", "Vienna") = {}'.format(
+        cosine_similarity([word_vector_cat], [word_vector_vienna])[0][0]))
+    print('Cosine similarity for pair3: ("Vienna", "Austria") = {}'.format(
+        cosine_similarity([word_vector_vienna], [word_vector_austria])[0][0]))
+    print('Cosine similarity for pair4: ("Austria", "dog") = {}'.format(
+        cosine_similarity([word_vector_austria], [word_vector_dog])[0][0]))
+
+    print('\n########## Top-3 most similar words ##########\n')
+    print('Top-3 most similar words for word1: "Vienna": {}'.format(
+        model.most_similar(positive=['Vienna'], topn=3)
+    ))
+    print('Top-3 most similar words for word2: "Austria": {}'.format(
+        model.most_similar(positive=['Austria'], topn=3)
+    ))
+    print('Top-3 most similar words for word3: "cat": {}'.format(
+        model.most_similar(positive=['cat'], topn=3)
+    ))
+
+
 def main():
+    part1()
     dataset = list(read_dataset('../dataset.tsv'))
     w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
     wo_stopword_removal = list(preprocess_dataset(dataset))
