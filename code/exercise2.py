@@ -3,6 +3,7 @@ Add the code for the 2nd exercise to this file. You can add additional ".py" fil
 functions, etc.).
 """
 import csv
+
 import gensim.models
 from dataclasses import dataclass
 from typing import Generator, Iterable, Callable
@@ -40,12 +41,14 @@ def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False)
 def short_text_embedding_1(data: Data) -> float:
     vectorizer = TfidfVectorizer()
     # Infer the text vector representation for the text pairs in "dataset.tsv".
-    # The input is expected to be a sequence of items that can be of type string or byte. Thus, we use ' '.join() here.
+    # Note: The input is expected to be a sequence of items that can be of type string or byte.
+    # Thus, we use ' '.join() here.
     tfidf = vectorizer.fit_transform([
         ' '.join(data.text1),
         ' '.join(data.text2)
     ]).toarray()
     # Compute the similarity between the text pairs using the cosine similarity.
+    # Note: [0, 0] extracts value from ndarray; [] around tfidf is needed, because ndarray is expected
     return cosine_similarity([tfidf[0]], [tfidf[1]])[0, 0]
 
 
@@ -101,23 +104,21 @@ def main():
     w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
     wo_stopword_removal = list(preprocess_dataset(dataset))
 
-    print('| Method                           | Preprocessing           | Pearson Correlation |')
-    print('|----------------------------------|-------------------------|---------------------|')
-    # Lower-casing + Stopword
-    print('| Vektor Space Model               | Lower-casing + Stopword |',
-          evaluate(short_text_embedding_1, w_stopword_removal), '-|')
-    print('| Average Word Embedding           | Lower-casing + Stopword |',
-          evaluate(short_text_embedding_2, w_stopword_removal), '-|')
-    print('| IDF Weighted Agg. Word Embedding | Lower-casing + Stopword |',
-          evaluate(short_text_embedding_3, w_stopword_removal), '-|')
+    datasets = [
+        ['Lower-casing + Stopword', w_stopword_removal],
+        ['Lower-casing', wo_stopword_removal]
+    ]
+    methods = [
+        ['Vector Space Model', short_text_embedding_1],
+        ['Average Word Embedding', short_text_embedding_2],
+        ['IDF Weighted Agg. Word Embedding', short_text_embedding_3]
+    ]
 
-    # Lower-casing
-    print('| Vektor Space Model               | Lower-casing            |',
-          evaluate(short_text_embedding_1, wo_stopword_removal), '-|')
-    print('| Average Word Embedding           | Lower-casing            |',
-          evaluate(short_text_embedding_2, wo_stopword_removal), '-|')
-    print('| IDF Weighted Agg. Word Embedding | Lower-casing            |',
-          evaluate(short_text_embedding_3, wo_stopword_removal), '-|')
+    print(f'| {"Method":32} | {"Preprocessing":23} | {"Pearson Correlation":19} |')
+    print(f'| {"-" * 32} | {"-" * 23} | {"-" * 19} |')
+    for d_text, d in datasets:
+        for m_text, m in methods:
+            print(f'| {m_text:32} | {d_text:23} | {evaluate(m, d):19} |')
 
 
 if __name__ == '__main__':
