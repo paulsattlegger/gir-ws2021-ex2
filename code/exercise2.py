@@ -11,8 +11,6 @@ from scipy.stats.stats import pearsonr
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-_filters = [strip_punctuation, strip_multiple_whitespaces, remove_stopwords, strip_short, lower_to_unicode]
-
 
 @dataclass
 class Data:
@@ -28,19 +26,26 @@ def read_dataset(file: str) -> Generator[Data, None, None]:
             yield Data(float(row[0]), row[1], row[2])
 
 
-def preprocess_dataset(dataset: Iterable[Data]) -> Iterable[Data]:
+def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False) -> Iterable[Data]:
+    filters = [strip_punctuation, strip_multiple_whitespaces, strip_short, lower_to_unicode]
+    if remove_stopwords_:
+        filters.append(remove_stopwords)
     for data in dataset:
-        data.text1 = preprocess_string(data.text1, filters=_filters)
-        data.text2 = preprocess_string(data.text2, filters=_filters)
-        yield data
+        yield Data(data.ground_truth,
+                   preprocess_string(data.text1, filters=filters),
+                   preprocess_string(data.text2, filters=filters))
 
 
 def short_text_embedding_1(data: Data):
-    vectorizer = TfidfVectorizer(stop_words='english')
+    vectorizer = TfidfVectorizer()
     # Infer the text vector representation for the text pairs in "dataset.tsv".
-    X = vectorizer.fit_transform([data.text1, data.text2])
+    # The input is expected to be a sequence of items that can be of type string or byte. Thus, we use ' '.join() here.
+    tfidf = vectorizer.fit_transform([
+        ' '.join(data.text1),
+        ' '.join(data.text2)
+    ]).toarray()
     # Compute the similarity between the text pairs using the cosine similarity.
-    return cosine_similarity(X)
+    return cosine_similarity([tfidf[0]], [tfidf[1]])[0, 0]
 
 
 def short_text_embedding_2(data: Data):
@@ -53,11 +58,33 @@ def short_text_embedding_3(data: Data):
 
 def main():
     dataset = list(read_dataset('../dataset.tsv'))
-    predicted_scores = list(map(short_text_embedding_1, dataset))
     gt_scores = list(map(lambda d: d.ground_truth, dataset))
-    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
+    wo_stopword_removal = list(preprocess_dataset(dataset))
 
-    dataset = list(preprocess_dataset(dataset))
+    print('| Method                           | Preprocessing           | Pearson Correlation |')
+    print('|----------------------------------|-------------------------|---------------------|')
+    # Lower-casing + Stopword
+    predicted_scores = list(map(short_text_embedding_1, w_stopword_removal))
+    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    print('| Vektor Space Model               | Lower-casing + Stopword |', pearson_correlation[0], '-|')
+    predicted_scores = list(map(short_text_embedding_2, w_stopword_removal))
+    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    print('| Average Word Embedding           | Lower-casing + Stopword |', pearson_correlation[0], '-|')
+    predicted_scores = list(map(short_text_embedding_3, w_stopword_removal))
+    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    print('| IDF Weighted Agg. Word Embedding | Lower-casing + Stopword |', pearson_correlation[0], '-|')
+
+    # Lower-casing
+    predicted_scores = list(map(short_text_embedding_1, wo_stopword_removal))
+    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    print('| Vektor Space Model               | Lower-casing            |', pearson_correlation[0], '-|')
+    predicted_scores = list(map(short_text_embedding_2, wo_stopword_removal))
+    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    print('| Average Word Embedding           | Lower-casing            |', pearson_correlation[0], '-|')
+    predicted_scores = list(map(short_text_embedding_3, wo_stopword_removal))
+    pearson_correlation = pearsonr(gt_scores, predicted_scores)
+    print('| IDF Weighted Agg. Word Embedding | Lower-casing            |', pearson_correlation[0], '-|')
 
 
 if __name__ == '__main__':
