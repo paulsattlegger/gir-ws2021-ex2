@@ -51,6 +51,7 @@ def short_text_embedding_2(data: Data):
 def short_text_embedding_3(data: Data):
     pass
 
+
 def part1():
     model = gensim.models.KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
     # print(model.get_vector("word", norm=True))  # normalizing usually improves performance
@@ -69,8 +70,6 @@ def part1():
         cosine_similarity(word_vector_vienna.reshape(1, -1), word_vector_austria.reshape(1, -1))))
     print('Cosine similarity for pair4: ("Austria", "dog") = {}'.format(
         cosine_similarity(word_vector_austria.reshape(1, -1), word_vector_dog.reshape(1, -1))))
-
-
 
 
 def main():
