@@ -81,6 +81,7 @@ def short_text_embedding_2(data: Data) -> float:
 
 
 def short_text_embedding_3(data: Data) -> float:
+    data = filter_data(data)
     vectorizer = TfidfVectorizer()
     tfidf = vectorizer.fit_transform([
         ' '.join(data.text1),
@@ -89,11 +90,13 @@ def short_text_embedding_3(data: Data) -> float:
 
     vector_representation = np.zeros_like(tfidf)
 
-    for word, word_embedding in compute_word_embedding(data.text1):
+    for word in data.text1:
+        word_embedding = language_model.get_vector(word, norm=True)
         index = vectorizer.vocabulary_.get(word)
         # vector_representation[0, index] = np.mean(word_embedding)
         vector_representation[0, index] = np.mean(word_embedding) * tfidf[0][index]
-    for word, word_embedding in compute_word_embedding(data.text2):
+    for word in data.text2:
+        word_embedding = language_model.get_vector(word, norm=True)
         index = vectorizer.vocabulary_.get(word)
         # vector_representation[1, index] = np.mean(word_embedding)
         vector_representation[1, index] = np.mean(word_embedding) * tfidf[1][index]
