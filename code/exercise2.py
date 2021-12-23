@@ -37,14 +37,7 @@ def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False)
 
 
 def short_text_embedding_1(data: Data) -> float:
-    vectorizer = TfidfVectorizer()
-    # Infer the text vector representation for the text pairs in "dataset.tsv".
-    # Note: The input is expected to be a sequence of items that can be of type string or byte.
-    # Thus, we use ' '.join() here.
-    tfidf = vectorizer.fit_transform([
-        ' '.join(data.text1),
-        ' '.join(data.text2)
-    ]).toarray()
+    tfidf = get_word_idf(data)
     # Compute the similarity between the text pairs using the cosine similarity.
     # Note: [0, 0] extracts value from ndarray; [] around tfidf is needed, because ndarray is expected
     return cosine_similarity([tfidf[0]], [tfidf[1]])[0, 0]
@@ -55,6 +48,19 @@ def short_text_embedding_2(data: Data) -> float:
 
 
 def short_text_embedding_3(data: Data) -> float:
+    pass
+
+def get_word_idf(data: Data):
+    vectorizer = TfidfVectorizer()
+    # Infer the text vector representation for the text pairs in "dataset.tsv".
+    # Note: The input is expected to be a sequence of items that can be of type string or byte.
+    # Thus, we use ' '.join() here.
+    return vectorizer.fit_transform([
+        ' '.join(data.text1),
+        ' '.join(data.text2)
+    ]).toarray()
+
+def aggregate_weighted_averaging(word_embeddings, word_idfs):
     pass
 
 
