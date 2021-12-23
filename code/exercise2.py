@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
+from functools import cached_property
 from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, Callable, Any
@@ -24,6 +25,10 @@ class Data:
     text1: str | list[str]
     text2: str | list[str]
 
+    @cached_property
+    def vocabulary(self):
+        return list(set(chain(self.text1, self.text2)))
+
 
 def read_dataset(file: str) -> Generator[Data, None, None]:
     with open(file) as tsv:
@@ -41,19 +46,10 @@ def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False)
                    preprocess_string(data.text2, filters=filters))
 
 
-def filter_text(text: list[str]) -> list[str]:
-    filtered_text = []
-    for word in text:
-        try:
-            language_model.get_vector(word)
-            filtered_text.append(word)
-        except KeyError:
-            pass
-    return filtered_text
-
-
 def filter_data(data: Data) -> Data:
-    return Data(data.ground_truth, filter_text(data.text1), filter_text(data.text2))
+    return Data(data.ground_truth,
+                [word for word in data.text1 if word in language_model.key_to_index],
+                [word for word in data.text2 if word in language_model.key_to_index])
 
 
 def _cosine_similarity(x: Any, y: Any = None, dense_output: Any = True) -> Any:
@@ -76,18 +72,17 @@ def short_text_embedding_1(data: Data) -> float:
 
 def short_text_embedding_2(data: Data) -> float:
     data = filter_data(data)
-    vocabulary = list(set(chain(data.text1, data.text2)))
-    vector_representation = np.zeros((2, len(vocabulary)))
+    vector_representation = np.zeros((2, len(data.vocabulary)))
     # For each word appearing in a text, compute a word embedding.
     for word in data.text1:
         vector = language_model.get_vector(word, norm=True)
         # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
-        vector_representation[0, vocabulary.index(word)] = np.mean(vector)
+        vector_representation[0, data.vocabulary.index(word)] = np.mean(vector)
     # For each word appearing in a text, compute a word embedding.
     for word in data.text2:
         vector = language_model.get_vector(word, norm=True)
         # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
-        vector_representation[1, vocabulary.index(word)] = np.mean(vector)
+        vector_representation[1, data.vocabulary.index(word)] = np.mean(vector)
 
     return _cosine_similarity(vector_representation[0], vector_representation[1])
 
