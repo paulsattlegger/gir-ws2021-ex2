@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from itertools import chain
 from pathlib import Path
+from shutil import get_terminal_size
 from typing import Generator, Iterable, Callable, List, Dict, Any
 
 import numpy as np
@@ -130,7 +131,7 @@ def part1():
     word_vector_vienna = language_model.get_vector("Vienna", norm=True)
     word_vector_austria = language_model.get_vector("Austria", norm=True)
 
-    print(f'\n{" Cosine similarity between the word vectors ".center(153, "#")}\n')
+    print(f'\n{" Cosine similarity between the word vectors ".center(get_terminal_size()[0], "#")}\n')
     print('Cosine similarity for pair1: ("cat", "dog")        =', _cosine_similarity(word_vector_cat, word_vector_dog))
     print('Cosine similarity for pair2: ("cat", "Vienna")     =',
           _cosine_similarity(word_vector_cat, word_vector_vienna))
@@ -139,7 +140,7 @@ def part1():
     print('Cosine similarity for pair4: ("Austria", "dog")    =',
           _cosine_similarity(word_vector_austria, word_vector_dog))
 
-    print(f'\n{" Top-3 most similar words ".center(153, "#")}\n')
+    print(f'\n{" Top-3 most similar words ".center(get_terminal_size()[0], "#")}\n')
     print('Top-3 most similar words for word1: "Vienna"  =',
           language_model.most_similar(positive=['Vienna'], topn=3))
     print('Top-3 most similar words for word2: "Austria" =',
@@ -148,7 +149,7 @@ def part1():
 
 
 def part2():
-    print(f'\n{" Short-Text Similarity ".center(153, "#")}\n')
+    print(f'\n{" Short-Text Similarity ".center(get_terminal_size()[0], "#")}\n')
     dataset = list(read_dataset('../dataset.tsv'))
     w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
     wo_stopword_removal = list(preprocess_dataset(dataset))
@@ -225,7 +226,7 @@ def load_german_modal(model_path):
 
 
 def part3():
-    print(f'\n{" Training new language models ".center(153, "#")}\n')
+    print(f'\n{" Training new language models ".center(get_terminal_size()[0], "#")}\n')
     german_model_file = Path('../german-tweet-sample-2019-04.model')
 
     if german_model_file.exists():
