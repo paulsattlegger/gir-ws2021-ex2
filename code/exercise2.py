@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, Callable
 
@@ -54,22 +55,23 @@ def short_text_embedding_1(data: Data) -> float:
     return cosine_similarity([tfidf[0]], [tfidf[1]])[0, 0]
 
 
-def compute_word_embedding(text: list[str]) -> Generator[np.array, None, None]:
+def compute_word_embedding(text: list[str]) -> Generator[tuple[str, np.array], None, None]:
     # For each word appearing in a text, compute a word embedding.
     for word in text:
         try:
-            yield language_model.get_vector(word, norm=True)
+            yield word, language_model.get_vector(word, norm=True)
         except KeyError:
             pass
 
 
 def short_text_embedding_2(data: Data) -> float:
-    vector_representation = np.zeros((2, max(len(data.text1), len(data.text2))))
+    vocabulary = list(set(chain(data.text1, data.text2)))
+    vector_representation = np.zeros((2, len(vocabulary)))
     # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
-    for i, vector in enumerate(compute_word_embedding(data.text1)):
-        vector_representation[0, i] = np.mean(vector)
-    for i, vector in enumerate(compute_word_embedding(data.text2)):
-        vector_representation[1, i] = np.mean(vector)
+    for word, word_embedding in compute_word_embedding(data.text1):
+        vector_representation[0, vocabulary.index(word)] = np.mean(word_embedding)
+    for word, word_embedding in compute_word_embedding(data.text2):
+        vector_representation[1, vocabulary.index(word)] = np.mean(word_embedding)
 
     return cosine_similarity([vector_representation[0]], [vector_representation[1]])[0, 0]
 
