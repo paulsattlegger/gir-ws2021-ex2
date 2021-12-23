@@ -63,13 +63,13 @@ def _cosine_similarity(x: Any, y: Any = None, dense_output: Any = True) -> Any:
 
 
 def short_text_embedding_1(data: Data) -> float:
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(preprocessor=lambda p: p, tokenizer=lambda t: t)
     # Infer the text vector representation for the text pairs in "dataset.tsv".
     # Note: The input is expected to be a sequence of items that can be of type string or byte.
     # Thus, we use ' '.join() here.
     tfidf = vectorizer.fit_transform([
-        ' '.join(data.text1),
-        ' '.join(data.text2)
+        data.text1,
+        data.text2
     ]).toarray()
     # Compute the similarity between the text pairs using the cosine similarity.
     return _cosine_similarity(tfidf[0], tfidf[1])
@@ -94,25 +94,26 @@ def short_text_embedding_2(data: Data) -> float:
 
 
 def short_text_embedding_3(data: Data) -> float:
-    vectorizer = TfidfVectorizer()
-    tfidf = vectorizer.fit_transform([
-        ' '.join(data.text1),
-        ' '.join(data.text2)
+    vectorizer = TfidfVectorizer(preprocessor=lambda p: p, tokenizer=lambda t: t)
+    vectorizer.fit_transform([
+        data.text1,
+        data.text2
     ]).toarray()
 
     data = filter_data(data)
 
     # For each word appearing in a text, compute a word embedding.
-    embeddings_text1 = np.zeros((len(tfidf[0]), 300))
-    embeddings_text2 = np.zeros((len(tfidf[1]), 300))
+    embeddings_text1 = np.zeros((len(vectorizer.idf_), 300))
+    embeddings_text2 = np.zeros((len(vectorizer.idf_), 300))
     for word in data.text1:
         embeddings_text1[vectorizer.vocabulary_.get(word)] = language_model.get_vector(word, norm=True)
     for word in data.text2:
         embeddings_text2[vectorizer.vocabulary_.get(word)] = language_model.get_vector(word, norm=True)
 
-    # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
-    embeddings_text1_aggregated = np.average(embeddings_text1, axis=0, weights=tfidf[0])
-    embeddings_text2_aggregated = np.average(embeddings_text2, axis=0, weights=tfidf[1])
+    # The word embeddings are aggregated using a weighted averaging based on each word’s IDF (Inverse Document
+    # Frequency) value.
+    embeddings_text1_aggregated = np.average(embeddings_text1, axis=0, weights=vectorizer.idf_)
+    embeddings_text2_aggregated = np.average(embeddings_text2, axis=0, weights=vectorizer.idf_)
 
     return _cosine_similarity(embeddings_text1_aggregated, embeddings_text2_aggregated)
 
