@@ -3,6 +3,7 @@ Add the code for the 2nd exercise to this file. You can add additional ".py" fil
 functions, etc.).
 """
 from __future__ import annotations
+
 import csv
 import gzip
 import json
@@ -10,16 +11,18 @@ import time
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import chain
-import numpy as np
+from pathlib import Path
 from typing import Generator, Iterable, Callable, List, Dict, Any
+
 import gensim
+import numpy as np
 from gensim.models import KeyedVectors
 from gensim.models.callbacks import CallbackAny2Vec
 from gensim.parsing.preprocessing import *
 from scipy.stats.stats import pearsonr
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from pathlib import Path
+
 
 @dataclass
 class Data:
@@ -64,7 +67,7 @@ def short_text_embedding_1(data: Data) -> float:
     # Infer the text vector representation for the text pairs in "dataset.tsv".
     # Note: The input is expected to be a sequence of items that can be of type string or byte.
     # Thus, we use ' '.join() here.
-    tfidf =  vectorizer.fit_transform([
+    tfidf = vectorizer.fit_transform([
         ' '.join(data.text1),
         ' '.join(data.text2)
     ]).toarray()
