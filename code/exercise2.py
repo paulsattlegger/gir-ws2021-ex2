@@ -4,6 +4,7 @@ functions, etc.).
 """
 import csv
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Generator, Iterable, Callable
 
 from gensim.models import KeyedVectors
@@ -115,6 +116,14 @@ def part2():
 
 
 if __name__ == '__main__':
-    language_model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
+    kv_file = Path('../wiki-news-300d-1M-subword.kv')
+    vec_file = Path('../wiki-news-300d-1M-subword.vec')
+
+    if kv_file.exists():
+        language_model = KeyedVectors.load(str(kv_file))
+    else:
+        language_model = KeyedVectors.load_word2vec_format(str(vec_file))
+        language_model.save(str(kv_file))
+
     part1()
     part2()
