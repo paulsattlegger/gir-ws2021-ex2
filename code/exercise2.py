@@ -8,7 +8,7 @@ import csv
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Generator, Iterable, Callable
+from typing import Generator, Iterable, Callable, Any
 
 import numpy as np
 from gensim.models import KeyedVectors
@@ -41,6 +41,11 @@ def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False)
                    preprocess_string(data.text2, filters=filters))
 
 
+def _cosine_similarity(x: Any, y: Any = None, dense_output: Any = True) -> Any:
+    # Note: [0, 0] extracts value from ndarray; [] around tfidf is needed, because ndarray is expected
+    return cosine_similarity([x], [y], dense_output)[0, 0]
+
+
 def short_text_embedding_1(data: Data) -> float:
     vectorizer = TfidfVectorizer()
     # Infer the text vector representation for the text pairs in "dataset.tsv".
@@ -51,8 +56,7 @@ def short_text_embedding_1(data: Data) -> float:
         ' '.join(data.text2)
     ]).toarray()
     # Compute the similarity between the text pairs using the cosine similarity.
-    # Note: [0, 0] extracts value from ndarray; [] around tfidf is needed, because ndarray is expected
-    return cosine_similarity([tfidf[0]], [tfidf[1]])[0, 0]
+    return _cosine_similarity(tfidf[0], tfidf[1])
 
 
 def compute_word_embedding(text: list[str]) -> Generator[tuple[str, np.array], None, None]:
@@ -73,7 +77,7 @@ def short_text_embedding_2(data: Data) -> float:
     for word, word_embedding in compute_word_embedding(data.text2):
         vector_representation[1, vocabulary.index(word)] = np.mean(word_embedding)
 
-    return cosine_similarity([vector_representation[0]], [vector_representation[1]])[0, 0]
+    return _cosine_similarity(vector_representation[0], vector_representation[1])
 
 
 def short_text_embedding_3(data: Data) -> float:
@@ -93,29 +97,25 @@ def part1():
     word_vector_vienna = language_model.get_vector("Vienna", norm=True)
     word_vector_austria = language_model.get_vector("Austria", norm=True)
 
-    print('########## Cosine similarity between the word vectors ##########\n')
-    print('Cosine similarity for pair1: ("cat", "dog") = {}'.format(
-        cosine_similarity([word_vector_cat], [word_vector_dog])[0][0]))
-    print('Cosine similarity for pair2: ("cat", "Vienna") = {}'.format(
-        cosine_similarity([word_vector_cat], [word_vector_vienna])[0][0]))
-    print('Cosine similarity for pair3: ("Vienna", "Austria") = {}'.format(
-        cosine_similarity([word_vector_vienna], [word_vector_austria])[0][0]))
-    print('Cosine similarity for pair4: ("Austria", "dog") = {}'.format(
-        cosine_similarity([word_vector_austria], [word_vector_dog])[0][0]))
+    print(f'\n{" Cosine similarity between the word vectors ".center(153, "#")}\n')
+    print('Cosine similarity for pair1: ("cat", "dog")        =', _cosine_similarity(word_vector_cat, word_vector_dog))
+    print('Cosine similarity for pair2: ("cat", "Vienna")     =',
+          _cosine_similarity(word_vector_cat, word_vector_vienna))
+    print('Cosine similarity for pair3: ("Vienna", "Austria") =',
+          _cosine_similarity(word_vector_vienna, word_vector_austria))
+    print('Cosine similarity for pair4: ("Austria", "dog")    =',
+          _cosine_similarity(word_vector_austria, word_vector_dog))
 
-    print('\n########## Top-3 most similar words ##########\n')
-    print('Top-3 most similar words for word1: "Vienna": {}'.format(
-        language_model.most_similar(positive=['Vienna'], topn=3)
-    ))
-    print('Top-3 most similar words for word2: "Austria": {}'.format(
-        language_model.most_similar(positive=['Austria'], topn=3)
-    ))
-    print('Top-3 most similar words for word3: "cat": {}'.format(
-        language_model.most_similar(positive=['cat'], topn=3)
-    ))
+    print(f'\n{" Top-3 most similar words ".center(153, "#")}\n')
+    print('Top-3 most similar words for word1: "Vienna"  =',
+          language_model.most_similar(positive=['Vienna'], topn=3))
+    print('Top-3 most similar words for word2: "Austria" =',
+          language_model.most_similar(positive=['Austria'], topn=3))
+    print('Top-3 most similar words for word3: "cat":    =', language_model.most_similar(positive=['cat'], topn=3))
 
 
 def part2():
+    print(f'\n{" Short-Text Similarity ".center(153, "#")}\n')
     dataset = list(read_dataset('../dataset.tsv'))
     w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
     wo_stopword_removal = list(preprocess_dataset(dataset))
@@ -129,7 +129,6 @@ def part2():
         ['Average Word Embedding', short_text_embedding_2],
         ['IDF Weighted Agg. Word Embedding', short_text_embedding_3]
     ]
-
     print(f'| {"Method":32} | {"Preprocessing":23} | {"Pearson Correlation":19} |')
     print(f'| {"-" * 32} | {"-" * 23} | {"-" * 19} |')
     for d_text, d in datasets:
