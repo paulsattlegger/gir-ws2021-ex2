@@ -4,6 +4,7 @@ functions, etc.).
 """
 import csv
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Generator, Iterable, Callable
 
 from gensim.models import KeyedVectors
@@ -63,12 +64,12 @@ def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
     return pearsonr(gt_scores, predicted_scores)[0]
 
 
-def part1(model):
+def part1():
     # Compute the word vectors for each given word
-    word_vector_cat = model.get_vector("cat", norm=True)
-    word_vector_dog = model.get_vector("dog", norm=True)
-    word_vector_vienna = model.get_vector("Vienna", norm=True)
-    word_vector_austria = model.get_vector("Austria", norm=True)
+    word_vector_cat = language_model.get_vector("cat", norm=True)
+    word_vector_dog = language_model.get_vector("dog", norm=True)
+    word_vector_vienna = language_model.get_vector("Vienna", norm=True)
+    word_vector_austria = language_model.get_vector("Austria", norm=True)
 
     print('########## Cosine similarity between the word vectors ##########\n')
     print('Cosine similarity for pair1: ("cat", "dog") = {}'.format(
@@ -82,13 +83,13 @@ def part1(model):
 
     print('\n########## Top-3 most similar words ##########\n')
     print('Top-3 most similar words for word1: "Vienna": {}'.format(
-        model.most_similar(positive=['Vienna'], topn=3)
+        language_model.most_similar(positive=['Vienna'], topn=3)
     ))
     print('Top-3 most similar words for word2: "Austria": {}'.format(
-        model.most_similar(positive=['Austria'], topn=3)
+        language_model.most_similar(positive=['Austria'], topn=3)
     ))
     print('Top-3 most similar words for word3: "cat": {}'.format(
-        model.most_similar(positive=['cat'], topn=3)
+        language_model.most_similar(positive=['cat'], topn=3)
     ))
 
 
@@ -115,6 +116,14 @@ def part2():
 
 
 if __name__ == '__main__':
-    language_model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
-    part1(language_model)
+    kv_file = Path('../wiki-news-300d-1M-subword.kv')
+    vec_file = Path('../wiki-news-300d-1M-subword.vec')
+
+    if kv_file.exists():
+        language_model = KeyedVectors.load(str(kv_file))
+    else:
+        language_model = KeyedVectors.load_word2vec_format(str(vec_file))
+        language_model.save(str(kv_file))
+
+    part1()
     part2()
