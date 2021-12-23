@@ -14,9 +14,8 @@ from itertools import chain
 from pathlib import Path
 from typing import Generator, Iterable, Callable, List, Dict, Any
 
-import gensim
 import numpy as np
-from gensim.models import KeyedVectors
+from gensim.models import KeyedVectors, Word2Vec
 from gensim.models.callbacks import CallbackAny2Vec
 from gensim.parsing.preprocessing import *
 from scipy.stats.stats import pearsonr
@@ -57,9 +56,9 @@ def filter_data(data: Data) -> Data:
                 [word for word in data.text2 if word in language_model.key_to_index])
 
 
-def _cosine_similarity(x: Any, y: Any = None, dense_output: Any = True) -> Any:
+def _cosine_similarity(x_: Any, y: Any = None, dense_output: Any = True) -> Any:
     # Note: [0, 0] extracts value from ndarray; [] around tfidf is needed, because ndarray is expected
-    return cosine_similarity([x], [y], dense_output)[0, 0]
+    return cosine_similarity([x_], [y], dense_output)[0, 0]
 
 
 def short_text_embedding_1(data: Data) -> float:
@@ -206,7 +205,7 @@ def train_german_model(model_path):
     texts = get_german_data_sample()
     texts_tokenized = [preprocess_string(text.lower(), filters) for text in texts if text is not None]
     print("start training...")
-    german_model = gensim.models.Word2Vec(
+    german_model = Word2Vec(
         sentences=texts_tokenized,
         vector_size=100,
         window=5,
@@ -222,17 +221,19 @@ def train_german_model(model_path):
 
 
 def load_german_modal(model_path):
-    return gensim.models.Word2Vec.load(model_path)
+    return Word2Vec.load(model_path)
 
 
 def part3():
-    model_path = "../models/german.model"
-    words = ["obst", "universität", "tisch"]
-    train = False
+    print(f'\n{" Training new language models ".center(153, "#")}\n')
+    german_model_file = Path('../german-tweet-sample-2019-04.model')
 
-    if train:
-        train_german_model(model_path)
-    german_model = load_german_modal(model_path)
+    if german_model_file.exists():
+        german_model = load_german_modal(str(german_model_file))
+    else:
+        german_model = train_german_model(str(german_model_file))
+
+    words = ['obst', 'universität', 'tisch']
 
     for word in words:
         similar = german_model.wv.most_similar(positive=[word], topn=3)
