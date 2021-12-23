@@ -75,14 +75,14 @@ def short_text_embedding_2(data: Data) -> float:
     vector_representation = np.zeros((2, len(data.vocabulary)))
     # For each word appearing in a text, compute a word embedding.
     for word in data.text1:
-        vector = language_model.get_vector(word, norm=True)
+        word_embedding = language_model.get_vector(word, norm=True)
         # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
-        vector_representation[0, data.vocabulary.index(word)] = np.mean(vector)
+        vector_representation[0, data.vocabulary.index(word)] = np.mean(word_embedding)
     # For each word appearing in a text, compute a word embedding.
     for word in data.text2:
-        vector = language_model.get_vector(word, norm=True)
+        word_embedding = language_model.get_vector(word, norm=True)
         # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
-        vector_representation[1, data.vocabulary.index(word)] = np.mean(vector)
+        vector_representation[1, data.vocabulary.index(word)] = np.mean(word_embedding)
 
     return _cosine_similarity(vector_representation[0], vector_representation[1])
 
