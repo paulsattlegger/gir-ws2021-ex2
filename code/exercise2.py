@@ -2,11 +2,14 @@
 Add the code for the 2nd exercise to this file. You can add additional ".py" files to your code repository (e.g. helper
 functions, etc.).
 """
+from __future__ import annotations
+
 import csv
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Generator, Iterable, Callable
 
+import numpy as np
 from gensim.models import KeyedVectors
 from gensim.parsing.preprocessing import *
 from scipy.stats.stats import pearsonr
@@ -17,8 +20,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 @dataclass
 class Data:
     ground_truth: float
-    text1: str
-    text2: str
+    text1: str | list[str]
+    text2: str | list[str]
 
 
 def read_dataset(file: str) -> Generator[Data, None, None]:
@@ -29,7 +32,8 @@ def read_dataset(file: str) -> Generator[Data, None, None]:
 
 
 def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False) -> Iterable[Data]:
-    filters = [lower_to_unicode, remove_stopwords] if remove_stopwords_ else [lower_to_unicode]
+    filters = [lower_to_unicode, strip_punctuation, remove_stopwords] if remove_stopwords_ else [lower_to_unicode,
+                                                                                                 strip_punctuation]
     for data in dataset:
         yield Data(data.ground_truth,
                    preprocess_string(data.text1, filters=filters),
@@ -50,8 +54,24 @@ def short_text_embedding_1(data: Data) -> float:
     return cosine_similarity([tfidf[0]], [tfidf[1]])[0, 0]
 
 
+def compute_word_embedding(text: list[str]) -> Generator[np.array, None, None]:
+    # For each word appearing in a text, compute a word embedding.
+    for word in text:
+        try:
+            yield language_model.get_vector(word, norm=True)
+        except KeyError:
+            pass
+
+
 def short_text_embedding_2(data: Data) -> float:
-    pass
+    vector_representation = np.zeros((2, max(len(data.text1), len(data.text2))))
+    # The word embeddings are aggregated via mean averaging to infer a vector representation for the text.
+    for i, vector in enumerate(compute_word_embedding(data.text1)):
+        vector_representation[0, i] = np.mean(vector)
+    for i, vector in enumerate(compute_word_embedding(data.text2)):
+        vector_representation[1, i] = np.mean(vector)
+
+    return cosine_similarity([vector_representation[0]], [vector_representation[1]])[0, 0]
 
 
 def short_text_embedding_3(data: Data) -> float:
