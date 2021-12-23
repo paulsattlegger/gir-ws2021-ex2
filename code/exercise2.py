@@ -70,7 +70,28 @@ def short_text_embedding_2(data: Data) -> float:
 
 
 def short_text_embedding_3(data: Data) -> float:
-    pass
+    vectorizer = TfidfVectorizer()
+    tfidf = vectorizer.fit_transform([
+        ' '.join(data.text1),
+        ' '.join(data.text2)
+    ]).toarray()
+
+    vector_representation = np.zeros_like(tfidf)
+
+    for word, word_embedding in compute_word_embedding(data.text1):
+        index = vectorizer.vocabulary_.get(word)
+        # vector_representation[0, index] = np.mean(word_embedding)
+        vector_representation[0, index] = np.mean(word_embedding) * tfidf[0][index]
+    for word, word_embedding in compute_word_embedding(data.text2):
+        index = vectorizer.vocabulary_.get(word)
+        # vector_representation[1, index] = np.mean(word_embedding)
+        vector_representation[1, index] = np.mean(word_embedding) * tfidf[1][index]
+
+    # result1 = np.average(vector_representation[0], weights=tfidf[0])
+    # result2 = np.average(vector_representation[1], weights=tfidf[1])
+    return cosine_similarity([vector_representation[0]], [vector_representation[1]])[0, 0]
+    # return cosine_similarity([result1], [result2])
+
 
 def get_word_idf(data: Data):
     vectorizer = TfidfVectorizer()
@@ -81,6 +102,7 @@ def get_word_idf(data: Data):
         ' '.join(data.text1),
         ' '.join(data.text2)
     ]).toarray()
+
 
 def aggregate_weighted_averaging(word_embeddings, word_idfs):
     pass
