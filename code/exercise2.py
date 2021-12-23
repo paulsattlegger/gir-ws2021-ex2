@@ -225,12 +225,16 @@ def load_german_modal(model_path):
 
 def part3():
     model_path = "../models/german.model"
+    words = ["obst", "universität", "tisch"]
     train = False
 
     if train:
         train_german_model(model_path)
     german_model = load_german_modal(model_path)
-    print(german_model)
+
+    for word in words:
+        similar = german_model.wv.most_similar(positive=[word], topn=3)
+        print(f'Top 3 similar words to "{word}" = {similar}')
 
 
 if __name__ == '__main__':
