@@ -3,15 +3,19 @@ Add the code for the 2nd exercise to this file. You can add additional ".py" fil
 functions, etc.).
 """
 import csv
+import gzip
+import json
+import time
 from dataclasses import dataclass
-from typing import Generator, Iterable, Callable
-
+from typing import Generator, Iterable, Callable, List, Dict
+import gensim
 from gensim.models import KeyedVectors
+from gensim.models.callbacks import CallbackAny2Vec
 from gensim.parsing.preprocessing import *
 from scipy.stats.stats import pearsonr
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
+from pathlib import Path
 
 @dataclass
 class Data:
@@ -114,7 +118,72 @@ def part2():
             print(f'| {m_text:32} | {d_text:23} | {evaluate(m, d):19} |')
 
 
+def read_json_from_zip() -> Generator[List[Dict], None, None]:
+    path = "../dataset/german-tweet-sample-2019-04/"
+    for child in Path(path).iterdir():
+        if child.is_file():
+            with gzip.open(child, 'r') as zipfile:
+                yield json.load(zipfile)
+
+
+def get_german_data_sample() -> Generator[str, None, None]:
+    data = read_json_from_zip()
+    for sample in data:
+        for tweet in sample:
+            yield tweet.get("text")
+
+
+class PrintLoss(CallbackAny2Vec):
+    def __init__(self):
+        self.epoch = 0
+        self.total_start = time.process_time()
+        self.epoch_start = time.process_time()
+
+    def on_epoch_end(self, model):
+        loss = model.get_latest_training_loss()
+        elapsed_t = time.process_time() - self.total_start
+        elapsed_e = time.process_time() - self.epoch_start
+        print(f'Loss after epoch {self.epoch}: {loss} \n Total time: {elapsed_t} \n Epoch time: {elapsed_e}\n')
+        self.epoch_start = time.process_time()
+        self.epoch += 1
+
+
+def train_german_model(model_path):
+    filters = [strip_tags, strip_punctuation, strip_multiple_whitespaces, strip_numeric, strip_short]
+    texts = get_german_data_sample()
+    texts_tokenized = [preprocess_string(text.lower(), filters) for text in texts if text is not None]
+    print("start training...")
+    german_model = gensim.models.Word2Vec(
+        sentences=texts_tokenized,
+        vector_size=100,
+        window=5,
+        min_count=5,
+        epochs=10,
+        workers=4,
+        compute_loss=True,
+        callbacks=[PrintLoss()])
+
+    print(f"saving model to {model_path}")
+    german_model.save(model_path)
+    return german_model
+
+
+def load_german_modal(model_path):
+    return gensim.models.Word2Vec.load(model_path)
+
+
+def part3():
+    model_path = "../models/german.model"
+    train = False
+
+    if train:
+        train_german_model(model_path)
+    german_model = load_german_modal(model_path)
+    print(german_model)
+
+
 if __name__ == '__main__':
     language_model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
     part1(language_model)
     part2()
+    part3()
