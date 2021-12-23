@@ -95,8 +95,7 @@ def part1():
     ))
 
 
-def main():
-    part1()
+def part2():
     dataset = list(read_dataset('../dataset.tsv'))
     w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
     wo_stopword_removal = list(preprocess_dataset(dataset))
@@ -119,4 +118,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
+    part1()
+    part2()
