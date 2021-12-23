@@ -58,7 +58,14 @@ def _cosine_similarity(x: Any, y: Any = None, dense_output: Any = True) -> Any:
 
 
 def short_text_embedding_1(data: Data) -> float:
-    tfidf = get_word_idf(data)
+    vectorizer = TfidfVectorizer()
+    # Infer the text vector representation for the text pairs in "dataset.tsv".
+    # Note: The input is expected to be a sequence of items that can be of type string or byte.
+    # Thus, we use ' '.join() here.
+    tfidf =  vectorizer.fit_transform([
+        ' '.join(data.text1),
+        ' '.join(data.text2)
+    ]).toarray()
     # Compute the similarity between the text pairs using the cosine similarity.
     return _cosine_similarity(tfidf[0], tfidf[1])
 
@@ -105,21 +112,6 @@ def short_text_embedding_3(data: Data) -> float:
     # result2 = np.average(vector_representation[1], weights=tfidf[1])
     return cosine_similarity([vector_representation[0]], [vector_representation[1]])[0, 0]
     # return cosine_similarity([result1], [result2])
-
-
-def get_word_idf(data: Data):
-    vectorizer = TfidfVectorizer()
-    # Infer the text vector representation for the text pairs in "dataset.tsv".
-    # Note: The input is expected to be a sequence of items that can be of type string or byte.
-    # Thus, we use ' '.join() here.
-    return vectorizer.fit_transform([
-        ' '.join(data.text1),
-        ' '.join(data.text2)
-    ]).toarray()
-
-
-def aggregate_weighted_averaging(word_embeddings, word_idfs):
-    pass
 
 
 def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
