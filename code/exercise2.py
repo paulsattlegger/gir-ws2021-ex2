@@ -10,11 +10,8 @@ import time
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import chain
-from pathlib import Path
-from typing import Generator, Iterable, Callable, Any
-
 import numpy as np
-from typing import Generator, Iterable, Callable, List, Dict
+from typing import Generator, Iterable, Callable, List, Dict, Any
 import gensim
 from gensim.models import KeyedVectors
 from gensim.models.callbacks import CallbackAny2Vec
