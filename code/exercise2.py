@@ -63,7 +63,7 @@ def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
     return pearsonr(gt_scores, predicted_scores)[0]
 
 
-def part1():
+def part1(model):
     # Load the model
     model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
 
@@ -118,6 +118,6 @@ def part2():
 
 
 if __name__ == '__main__':
-    model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
-    part1()
+    language_model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
+    part1(language_model)
     part2()
