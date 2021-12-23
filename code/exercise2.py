@@ -3,11 +3,10 @@ Add the code for the 2nd exercise to this file. You can add additional ".py" fil
 functions, etc.).
 """
 import csv
-
-import gensim.models
 from dataclasses import dataclass
 from typing import Generator, Iterable, Callable
 
+from gensim.models import KeyedVectors
 from gensim.parsing.preprocessing import *
 from scipy.stats.stats import pearsonr
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -29,9 +28,7 @@ def read_dataset(file: str) -> Generator[Data, None, None]:
 
 
 def preprocess_dataset(dataset: Iterable[Data], remove_stopwords_: bool = False) -> Iterable[Data]:
-    filters = [strip_punctuation, strip_multiple_whitespaces, strip_short, lower_to_unicode]
-    if remove_stopwords_:
-        filters.append(remove_stopwords)
+    filters = [lower_to_unicode, remove_stopwords] if remove_stopwords_ else [lower_to_unicode]
     for data in dataset:
         yield Data(data.ground_truth,
                    preprocess_string(data.text1, filters=filters),
@@ -67,7 +64,7 @@ def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
 
 
 def part1():
-    model = gensim.models.KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
+    model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
     # print(model.get_vector("word", norm=True))  # normalizing usually improves performance
     # print(model.get_vector("word", norm=True).__sizeof__())  # normalizing usually improves performance
 
