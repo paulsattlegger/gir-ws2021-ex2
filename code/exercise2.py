@@ -64,9 +64,6 @@ def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
 
 
 def part1(model):
-    # Load the model
-    model = KeyedVectors.load_word2vec_format('../wiki-news-300d-1M-subword.vec')
-
     # Compute the word vectors for each given word
     word_vector_cat = model.get_vector("cat", norm=True)
     word_vector_dog = model.get_vector("dog", norm=True)
