@@ -235,7 +235,7 @@ def load_german_modal(model_path):
 def part3():
     print(f'\n{" Part 3 ".center(get_terminal_size()[0], "-")}\n')
     print(f'{" Training new language models ".center(get_terminal_size()[0], "#")}\n')
-    german_model_file = Path('../german-tweet-sample-2019-04.model')
+    german_model_file = Path('../dataset/german-tweet-sample-2019-04.model')
 
     if german_model_file.exists():
         german_model = load_german_modal(str(german_model_file))
@@ -250,8 +250,8 @@ def part3():
 
 
 if __name__ == '__main__':
-    kv_file = Path('../wiki-news-300d-1M-subword.kv')
-    vec_file = Path('../wiki-news-300d-1M-subword.vec')
+    kv_file = Path('../dataset/wiki-news-300d-1M-subword.kv')
+    vec_file = Path('../dataset/wiki-news-300d-1M-subword.vec')
 
     if kv_file.exists():
         language_model = KeyedVectors.load(str(kv_file))
