@@ -125,13 +125,14 @@ def evaluate(func: Callable[[Data], float], dataset: Iterable[Data]):
 
 
 def part1():
+    print(f'\n{" Part 1 ".center(get_terminal_size()[0], "-")}\n')
     # Compute the word vectors for each given word
     word_vector_cat = language_model.get_vector("cat", norm=True)
     word_vector_dog = language_model.get_vector("dog", norm=True)
     word_vector_vienna = language_model.get_vector("Vienna", norm=True)
     word_vector_austria = language_model.get_vector("Austria", norm=True)
 
-    print(f'\n{" Cosine similarity between the word vectors ".center(get_terminal_size()[0], "#")}\n')
+    print(f'{" Cosine similarity between the word vectors ".center(get_terminal_size()[0], "#")}\n')
     print('Cosine similarity for pair1: ("cat", "dog")        =', _cosine_similarity(word_vector_cat, word_vector_dog))
     print('Cosine similarity for pair2: ("cat", "Vienna")     =',
           _cosine_similarity(word_vector_cat, word_vector_vienna))
@@ -149,7 +150,8 @@ def part1():
 
 
 def part2():
-    print(f'\n{" Short-Text Similarity ".center(get_terminal_size()[0], "#")}\n')
+    print(f'\n{" Part 2 ".center(get_terminal_size()[0], "-")}\n')
+    print(f'{" Short-Text Similarity ".center(get_terminal_size()[0], "#")}\n')
     dataset = list(read_dataset('../dataset.tsv'))
     w_stopword_removal = list(preprocess_dataset(dataset, remove_stopwords_=True))
     wo_stopword_removal = list(preprocess_dataset(dataset))
@@ -226,7 +228,8 @@ def load_german_modal(model_path):
 
 
 def part3():
-    print(f'\n{" Training new language models ".center(get_terminal_size()[0], "#")}\n')
+    print(f'\n{" Part 3 ".center(get_terminal_size()[0], "-")}\n')
+    print(f'{" Training new language models ".center(get_terminal_size()[0], "#")}\n')
     german_model_file = Path('../german-tweet-sample-2019-04.model')
 
     if german_model_file.exists():
