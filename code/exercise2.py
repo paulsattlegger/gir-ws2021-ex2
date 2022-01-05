@@ -9,7 +9,7 @@ import gzip
 import json
 import time
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cached_property, partial
 from itertools import chain
 from pathlib import Path
 from shutil import get_terminal_size
@@ -65,8 +65,6 @@ def _cosine_similarity(x_: Any, y: Any = None, dense_output: Any = True) -> Any:
 def short_text_embedding_1(data: Data) -> float:
     vectorizer = TfidfVectorizer(preprocessor=lambda p: p, tokenizer=lambda t: t)
     # Infer the text vector representation for the text pairs in "dataset.tsv".
-    # Note: The input is expected to be a sequence of items that can be of type string or byte.
-    # Thus, we use ' '.join() here.
     tfidf = vectorizer.fit_transform([
         data.text1,
         data.text2
@@ -93,13 +91,7 @@ def short_text_embedding_2(data: Data) -> float:
     return _cosine_similarity(embeddings_text1_aggregated, embeddings_text2_aggregated)
 
 
-def short_text_embedding_3(data: Data) -> float:
-    vectorizer = TfidfVectorizer(preprocessor=lambda p: p, tokenizer=lambda t: t)
-    vectorizer.fit_transform([
-        data.text1,
-        data.text2
-    ]).toarray()
-
+def short_text_embedding_3(vectorizer: TfidfVectorizer, data: Data) -> float:
     data = filter_data(data)
 
     # For each word appearing in a text, compute a word embedding.
@@ -169,8 +161,21 @@ def part2():
     print(f'| {"Method":32} | {"Preprocessing":23} | {"Pearson Correlation":19} |')
     print(f'| {"-" * 32} | {"-" * 23} | {"-" * 19} |')
     for d_text, d in datasets:
-        for m_text, m in methods:
+        for i, (m_text, m) in enumerate(methods):
+            if i == 2:
+                m = partial(short_text_embedding_3, get_tfidf_weights(d))
             print(f'| {m_text:32} | {d_text:23} | {evaluate(m, d):19} |')
+
+
+def get_tfidf_weights(dataset: list[Data]):
+    vectorizer = TfidfVectorizer(preprocessor=lambda p: p, tokenizer=lambda t: t)
+    all_text = []
+    for data in dataset:
+        all_text.append(data.text1)
+        all_text.append(data.text2)
+
+    vectorizer.fit_transform(all_text)
+    return vectorizer
 
 
 def read_json_from_zip() -> Generator[List[Dict], None, None]:
